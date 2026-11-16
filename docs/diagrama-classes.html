@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8" />
+<style>
+  * { box-sizing: border-box; }
+  @page { size: A4 landscape; margin: 14mm; }
+  body {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    color: #1C2433;
+    margin: 0;
+  }
+  .titulo {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 2px;
+  }
+  .subtitulo {
+    font-size: 12px;
+    color: #697184;
+    margin: 0 0 14px;
+  }
+  svg { display: block; }
+  .classe-nome { font-size: 15px; font-weight: 700; font-family: "Courier New", monospace; }
+  .atributo, .operacao { font-size: 12px; font-family: "Courier New", monospace; }
+  .mult { font-size: 11px; fill: #44506b; font-family: Arial, sans-serif; }
+  .legenda { font-size: 11px; fill: #697184; font-family: Arial, sans-serif; }
+</style>
+</head>
+<body>
+  <p class="titulo">Diagrama de Classes — Inventário de TI</p>
+  <p class="subtitulo">Camada de modelo (backend/app/models.py) — atributos conforme as colunas das tabelas; operações conforme as rotas da API que cada entidade expõe.</p>
+
+  <svg viewBox="0 0 1050 580" width="1050" height="580" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#1C2433"/>
+      </marker>
+    </defs>
+
+    <!-- ===================== Equipamento ===================== -->
+    <g transform="translate(40,170)">
+      <rect width="270" height="240" fill="#FFFFFF" stroke="#1C2433" stroke-width="1.5" rx="2"/>
+      <rect width="270" height="30" fill="#E8EEFC" stroke="#1C2433" stroke-width="1.5" rx="2"/>
+      <text x="135" y="20" text-anchor="middle" class="classe-nome">Equipamento</text>
+      <line x1="0" y1="30" x2="270" y2="30" stroke="#1C2433"/>
+      <text x="10" y="46" class="atributo">- id: int</text>
+      <text x="10" y="61" class="atributo">- nome: string</text>
+      <text x="10" y="76" class="atributo">- tipo: string</text>
+      <text x="10" y="91" class="atributo">- numeroPatrimonio: string</text>
+      <text x="10" y="106" class="atributo">- numeroSerie: string</text>
+      <text x="10" y="121" class="atributo">- marca: string</text>
+      <text x="10" y="136" class="atributo">- modelo: string</text>
+      <text x="10" y="151" class="atributo">- valor: decimal</text>
+      <text x="10" y="166" class="atributo">- status: string</text>
+      <text x="10" y="181" class="atributo">- imagemUrl: string</text>
+      <text x="10" y="196" class="atributo">- criadoEm: datetime</text>
+      <line x1="0" y1="206" x2="270" y2="206" stroke="#1C2433"/>
+      <text x="10" y="222" class="operacao">+ criar() / atualizar()</text>
+      <text x="10" y="237" class="operacao">+ baixar() / reativar()</text>
+    </g>
+
+    <!-- ===================== Atribuicao ===================== -->
+    <g transform="translate(430,20)">
+      <rect width="260" height="220" fill="#FFFFFF" stroke="#1C2433" stroke-width="1.5" rx="2"/>
+      <rect width="260" height="30" fill="#E8EEFC" stroke="#1C2433" stroke-width="1.5" rx="2"/>
+      <text x="130" y="20" text-anchor="middle" class="classe-nome">Atribuicao</text>
+      <line x1="0" y1="30" x2="260" y2="30" stroke="#1C2433"/>
+      <text x="10" y="46" class="atributo">- id: int</text>
+      <text x="10" y="61" class="atributo">- equipamentoId: int</text>
+      <text x="10" y="76" class="atributo">- equipamentoNome: string</text>
+      <text x="10" y="91" class="atributo">- responsavelNome: string</text>
+      <text x="10" y="106" class="atributo">- setor: string</text>
+      <text x="10" y="121" class="atributo">- observacao: string</text>
+      <text x="10" y="136" class="atributo">- dataRetirada: datetime</text>
+      <text x="10" y="151" class="atributo">- dataDevolucao: datetime</text>
+      <line x1="0" y1="161" x2="260" y2="161" stroke="#1C2433"/>
+      <text x="10" y="177" class="operacao">+ atribuir()</text>
+      <text x="10" y="192" class="operacao">+ devolver()</text>
+    </g>
+
+    <!-- ===================== Manutencao ===================== -->
+    <g transform="translate(430,330)">
+      <rect width="260" height="220" fill="#FFFFFF" stroke="#1C2433" stroke-width="1.5" rx="2"/>
+      <rect width="260" height="30" fill="#E8EEFC" stroke="#1C2433" stroke-width="1.5" rx="2"/>
+      <text x="130" y="20" text-anchor="middle" class="classe-nome">Manutencao</text>
+      <line x1="0" y1="30" x2="260" y2="30" stroke="#1C2433"/>
+      <text x="10" y="46" class="atributo">- id: int</text>
+      <text x="10" y="61" class="atributo">- equipamentoId: int</text>
+      <text x="10" y="76" class="atributo">- equipamentoNome: string</text>
+      <text x="10" y="91" class="atributo">- motivo: string</text>
+      <text x="10" y="106" class="atributo">- custo: decimal</text>
+      <text x="10" y="121" class="atributo">- observacao: string</text>
+      <text x="10" y="136" class="atributo">- dataInicio: datetime</text>
+      <text x="10" y="151" class="atributo">- dataFim: datetime</text>
+      <line x1="0" y1="161" x2="260" y2="161" stroke="#1C2433"/>
+      <text x="10" y="177" class="operacao">+ abrir()</text>
+      <text x="10" y="192" class="operacao">+ finalizar()</text>
+    </g>
+
+    <!-- ===================== Usuario ===================== -->
+    <g transform="translate(790,60)">
+      <rect width="230" height="175" fill="#FFFFFF" stroke="#1C2433" stroke-width="1.5" rx="2"/>
+      <rect width="230" height="30" fill="#E8EEFC" stroke="#1C2433" stroke-width="1.5" rx="2"/>
+      <text x="115" y="20" text-anchor="middle" class="classe-nome">Usuario</text>
+      <line x1="0" y1="30" x2="230" y2="30" stroke="#1C2433"/>
+      <text x="10" y="46" class="atributo">- id: int</text>
+      <text x="10" y="61" class="atributo">- nome: string</text>
+      <text x="10" y="76" class="atributo">- email: string</text>
+      <text x="10" y="91" class="atributo">- senhaHash: string</text>
+      <text x="10" y="106" class="atributo">- papel: string</text>
+      <text x="10" y="121" class="atributo">- criadoEm: datetime</text>
+      <line x1="0" y1="131" x2="230" y2="131" stroke="#1C2433"/>
+      <text x="10" y="147" class="operacao">+ autenticar()</text>
+      <text x="10" y="162" class="operacao">+ logout()</text>
+    </g>
+
+    <!-- ===================== Sessao ===================== -->
+    <g transform="translate(790,330)">
+      <rect width="230" height="145" fill="#FFFFFF" stroke="#1C2433" stroke-width="1.5" rx="2"/>
+      <rect width="230" height="30" fill="#E8EEFC" stroke="#1C2433" stroke-width="1.5" rx="2"/>
+      <text x="115" y="20" text-anchor="middle" class="classe-nome">Sessao</text>
+      <line x1="0" y1="30" x2="230" y2="30" stroke="#1C2433"/>
+      <text x="10" y="46" class="atributo">- token: string</text>
+      <text x="10" y="61" class="atributo">- usuarioId: int</text>
+      <text x="10" y="76" class="atributo">- criadoEm: datetime</text>
+      <text x="10" y="91" class="atributo">- expiraEm: datetime</text>
+      <line x1="0" y1="101" x2="230" y2="101" stroke="#1C2433"/>
+      <text x="10" y="117" class="operacao">+ expirar()</text>
+    </g>
+
+    <!-- ===================== Relacionamentos ===================== -->
+    <!-- Equipamento -> Atribuicao -->
+    <line x1="310" y1="230" x2="430" y2="130" stroke="#1C2433" stroke-width="1.5" marker-end="url(#seta)"/>
+    <text x="318" y="215" class="mult">1</text>
+    <text x="400" y="138" class="mult">0..*</text>
+
+    <!-- Equipamento -> Manutencao -->
+    <line x1="310" y1="330" x2="430" y2="430" stroke="#1C2433" stroke-width="1.5" marker-end="url(#seta)"/>
+    <text x="318" y="345" class="mult">1</text>
+    <text x="400" y="423" class="mult">0..*</text>
+
+    <!-- Usuario -> Sessao -->
+    <line x1="905" y1="235" x2="905" y2="330" stroke="#1C2433" stroke-width="1.5" marker-end="url(#seta)"/>
+    <text x="912" y="250" class="mult">1</text>
+    <text x="912" y="325" class="mult">0..*</text>
+
+    <text x="40" y="565" class="legenda">Seta cheia = associação direcional (a classe de origem referencia a de destino por chave estrangeira). "1" / "0..*" = multiplicidade nas pontas.</text>
+  </svg>
+</body>
+</html>
