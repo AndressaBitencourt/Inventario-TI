@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inventário de TI — Equipamentos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="sidebar-brand-icon">🖥️</span>
+        <span class="sidebar-brand-text">Inventário TI</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.2"/><rect x="14" y="3" width="7" height="7" rx="1.2"/><rect x="3" y="14" width="7" height="7" rx="1.2"/><rect x="14" y="14" width="7" height="7" rx="1.2"/></svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="/equipamentos.html" class="sidebar-link ativo">
+          <svg viewBox="0 0 24 24"><path d="M3 7.5 12 3l9 4.5-9 4.5-9-4.5Z"/><path d="M3 7.5v9L12 21l9-4.5v-9"/><path d="M12 12v9"/></svg>
+          <span>Equipamentos</span>
+        </a>
+        <a href="/historico.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+          <span>Histórico</span>
+        </a>
+        <a href="/relatorios.html" class="sidebar-link" id="link-relatorios">
+          <svg viewBox="0 0 24 24" stroke-linecap="round"><path d="M4 20V11M10 20V4M16 20v6M21 20H3"/></svg>
+          <span>Relatórios</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-user-avatar" id="avatar-iniciais">—</div>
+          <div class="sidebar-user-info">
+            <strong id="usuario-nome">—</strong>
+            <small id="usuario-papel">—</small>
+          </div>
+        </div>
+        <button type="button" id="btn-sair" class="sidebar-sair">Sair</button>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div>
+          <h1>Equipamentos</h1>
+          <div class="subtitulo">Catálogo completo de ativos de TI</div>
+        </div>
+        <div class="topbar-actions">
+          <button type="button" id="btn-novo">+ Novo equipamento</button>
+        </div>
+      </header>
+
+      <main class="content">
+        <section class="panel" id="secao-form" hidden>
+          <h2 id="form-titulo">Novo equipamento</h2>
+          <form id="form-equipamento">
+            <div class="campos-grid">
+              <label>Nome
+                <input type="text" id="nome" maxlength="80" required />
+              </label>
+              <label>Tipo
+                <input type="text" id="tipo" maxlength="40" required list="tipos-lista" />
+                <datalist id="tipos-lista"></datalist>
+              </label>
+              <label>Número de patrimônio
+                <input type="text" id="numero_patrimonio" maxlength="40" required />
+              </label>
+              <label>Número de série
+                <input type="text" id="numero_serie" maxlength="60" />
+              </label>
+              <label>Marca
+                <input type="text" id="marca" maxlength="60" required />
+              </label>
+              <label>Modelo
+                <input type="text" id="modelo" maxlength="60" required />
+              </label>
+              <label>Valor de aquisição (R$)
+                <input type="number" id="valor" min="0.01" step="0.01" />
+              </label>
+              <label>Foto do equipamento
+                <input type="file" id="imagem" accept="image/jpeg,image/png,image/webp" />
+              </label>
+            </div>
+            <img id="preview-imagem" class="preview-img" hidden alt="Prévia da foto" />
+            <div class="acoes">
+              <button type="submit" id="btn-salvar">Salvar equipamento</button>
+              <button type="button" id="btn-cancelar" class="secundario">Cancelar</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="list-toolbar">
+            <input type="text" id="busca" class="busca-input" placeholder="Buscar por nome, patrimônio, marca ou modelo…" />
+            <div class="pill-filters" id="status-pills"></div>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th class="sortavel" data-campo="nome">Nome</th>
+                <th class="sortavel" data-campo="numero_patrimonio">Patrimônio</th>
+                <th class="sortavel" data-campo="tipo">Tipo</th>
+                <th>Marca / Modelo</th>
+                <th class="sortavel" data-campo="valor">Valor</th>
+                <th class="sortavel" data-campo="status">Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="lista-equipamentos"></tbody>
+          </table>
+          <p class="vazio" id="equipamentos-vazio" hidden>Nenhum equipamento encontrado.</p>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <dialog id="dialog-atribuir">
+    <h3>Atribuir equipamento</h3>
+    <p id="atribuir-equipamento-nome" class="dialog-subtitulo"></p>
+    <form id="form-atribuir">
+      <label>Responsável
+        <input type="text" id="atribuir-responsavel" maxlength="80" required />
+      </label>
+      <label>Setor
+        <input type="text" id="atribuir-setor" maxlength="60" required list="setores-lista" />
+        <datalist id="setores-lista"></datalist>
+      </label>
+      <label>Observação
+        <input type="text" id="atribuir-observacao" maxlength="255" />
+      </label>
+      <div class="acoes">
+        <button type="submit">Confirmar atribuição</button>
+        <button type="button" id="btn-cancelar-atribuir" class="secundario">Cancelar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dialog-manutencao">
+    <h3>Enviar para manutenção</h3>
+    <p id="manutencao-equipamento-nome" class="dialog-subtitulo"></p>
+    <form id="form-manutencao">
+      <label>Motivo
+        <input type="text" id="manutencao-motivo" maxlength="255" required />
+      </label>
+      <label>Custo estimado (R$)
+        <input type="number" id="manutencao-custo" min="0.01" step="0.01" />
+      </label>
+      <label>Observação
+        <input type="text" id="manutencao-observacao" maxlength="255" />
+      </label>
+      <div class="acoes">
+        <button type="submit">Confirmar envio</button>
+        <button type="button" id="btn-cancelar-manutencao" class="secundario">Cancelar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="aviso" class="aviso" hidden></div>
+
+  <script src="equipamentos.js"></script>
+</body>
+</html>

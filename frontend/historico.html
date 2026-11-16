@@ -5,63 +5,95 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Inventário de TI — Histórico</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header>
-    <h1>🖥️ Inventário de TI — Histórico</h1>
-    <button class="hamb-btn" id="btn-menu" aria-label="Abrir menu" aria-expanded="false">☰</button>
-    <nav class="hamb-menu" id="menu-nav" hidden>
-      <a href="/">Equipamentos</a>
-      <a href="/historico.html" class="active">Histórico</a>
-      <a href="/relatorios.html" id="link-relatorios">Relatórios</a>
-      <div class="menu-usuario">
-        <span id="usuario-nome"></span>
-        <button type="button" id="btn-sair" class="secundario">Sair</button>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="sidebar-brand-icon">🖥️</span>
+        <span class="sidebar-brand-text">Inventário TI</span>
       </div>
-    </nav>
-  </header>
+      <nav class="sidebar-nav">
+        <a href="/" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.2"/><rect x="14" y="3" width="7" height="7" rx="1.2"/><rect x="3" y="14" width="7" height="7" rx="1.2"/><rect x="14" y="14" width="7" height="7" rx="1.2"/></svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="/equipamentos.html" class="sidebar-link">
+          <svg viewBox="0 0 24 24"><path d="M3 7.5 12 3l9 4.5-9 4.5-9-4.5Z"/><path d="M3 7.5v9L12 21l9-4.5v-9"/><path d="M12 12v9"/></svg>
+          <span>Equipamentos</span>
+        </a>
+        <a href="/historico.html" class="sidebar-link ativo">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+          <span>Histórico</span>
+        </a>
+        <a href="/relatorios.html" class="sidebar-link" id="link-relatorios">
+          <svg viewBox="0 0 24 24" stroke-linecap="round"><path d="M4 20V11M10 20V4M16 20v6M21 20H3"/></svg>
+          <span>Relatórios</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-user-avatar" id="avatar-iniciais">—</div>
+          <div class="sidebar-user-info">
+            <strong id="usuario-nome">—</strong>
+            <small id="usuario-papel">—</small>
+          </div>
+        </div>
+        <button type="button" id="btn-sair" class="sidebar-sair">Sair</button>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div>
+          <h1>Histórico</h1>
+          <div class="subtitulo">Todas as atribuições e manutenções já registradas</div>
+        </div>
+      </header>
+
+      <main class="content">
+        <section class="panel">
+          <h2>Atribuições</h2>
+          <label class="filtro-checkbox">
+            <input type="checkbox" id="filtro-atribuicoes-ativas" checked />
+            Mostrar só as atribuições ativas
+          </label>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Equipamento</th><th>Responsável</th><th>Setor</th>
+                <th>Retirada</th><th>Devolução</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="lista-atribuicoes"></tbody>
+          </table>
+          <p class="vazio" id="atribuicoes-vazio" hidden>Nenhuma atribuição encontrada.</p>
+        </section>
+
+        <section class="panel">
+          <h2>Manutenções</h2>
+          <label class="filtro-checkbox">
+            <input type="checkbox" id="filtro-manutencoes-abertas" checked />
+            Mostrar só as manutenções abertas
+          </label>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Equipamento</th><th>Motivo</th><th>Custo</th>
+                <th>Início</th><th>Fim</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="lista-manutencoes"></tbody>
+          </table>
+          <p class="vazio" id="manutencoes-vazio" hidden>Nenhuma manutenção encontrada.</p>
+        </section>
+      </main>
+    </div>
+  </div>
 
   <div id="aviso" class="aviso" hidden></div>
-
-  <main>
-    <section id="secao-atribuicoes">
-      <h2>Atribuições</h2>
-      <label class="filtro-checkbox">
-        <input type="checkbox" id="filtro-atribuicoes-ativas" checked />
-        Mostrar só as atribuições ativas
-      </label>
-      <table>
-        <thead>
-          <tr>
-            <th>Equipamento</th><th>Responsável</th><th>Setor</th>
-            <th>Retirada</th><th>Devolução</th><th></th>
-          </tr>
-        </thead>
-        <tbody id="lista-atribuicoes"></tbody>
-      </table>
-      <p id="atribuicoes-vazio" hidden>Nenhuma atribuição encontrada.</p>
-    </section>
-
-    <section id="secao-manutencoes">
-      <h2>Manutenções</h2>
-      <label class="filtro-checkbox">
-        <input type="checkbox" id="filtro-manutencoes-abertas" checked />
-        Mostrar só as manutenções abertas
-      </label>
-      <table>
-        <thead>
-          <tr>
-            <th>Equipamento</th><th>Motivo</th><th>Custo</th>
-            <th>Início</th><th>Fim</th><th></th>
-          </tr>
-        </thead>
-        <tbody id="lista-manutencoes"></tbody>
-      </table>
-      <p id="manutencoes-vazio" hidden>Nenhuma manutenção encontrada.</p>
-    </section>
-  </main>
 
   <script src="historico.js"></script>
 </body>

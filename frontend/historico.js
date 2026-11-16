@@ -28,20 +28,10 @@ function dataHora(iso) {
   return iso ? new Date(iso).toLocaleString("pt-BR") : "—";
 }
 
-function initMenu() {
-  const btn = $("#btn-menu");
-  const menu = $("#menu-nav");
-  btn.addEventListener("click", () => {
-    const vaiAbrir = menu.hidden;
-    menu.hidden = !vaiAbrir;
-    btn.setAttribute("aria-expanded", String(vaiAbrir));
-  });
-  document.addEventListener("click", (e) => {
-    if (!menu.hidden && !menu.contains(e.target) && e.target !== btn) {
-      menu.hidden = true;
-      btn.setAttribute("aria-expanded", "false");
-    }
-  });
+function iniciais(nome) {
+  const partes = nome.trim().split(/\s+/);
+  const letras = partes.length > 1 ? partes[0][0] + partes[partes.length - 1][0] : partes[0].slice(0, 2);
+  return letras.toUpperCase();
 }
 
 async function verificarSessao(papelExigido) {
@@ -58,8 +48,10 @@ async function verificarSessao(papelExigido) {
   return usuario;
 }
 
-function aplicarUsuarioNoMenu(usuario) {
+function aplicarUsuarioNaSidebar(usuario) {
   $("#usuario-nome").textContent = usuario.nome;
+  $("#usuario-papel").textContent = usuario.papel;
+  $("#avatar-iniciais").textContent = iniciais(usuario.nome);
   const linkRelatorios = $("#link-relatorios");
   if (linkRelatorios) linkRelatorios.hidden = usuario.papel !== "admin";
   $("#btn-sair").addEventListener("click", async () => {
@@ -85,6 +77,10 @@ async function api(caminho, opcoes) {
   return corpo;
 }
 
+function linkEquipamento(id, nome) {
+  return `<a href="/equipamento-detalhe.html?id=${id}">${esc(nome)}</a>`;
+}
+
 async function carregarAtribuicoes() {
   const somenteAtivas = $("#filtro-atribuicoes-ativas").checked;
   const atribuicoes = await api(`/atribuicoes?somente_ativas=${somenteAtivas}`);
@@ -94,7 +90,7 @@ async function carregarAtribuicoes() {
   for (const a of atribuicoes) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${esc(a.equipamento_nome)}</td>
+      <td>${linkEquipamento(a.equipamento_id, a.equipamento_nome)}</td>
       <td>${esc(a.responsavel_nome)}</td>
       <td>${esc(a.setor)}</td>
       <td>${dataHora(a.data_retirada)}</td>
@@ -127,7 +123,7 @@ async function carregarManutencoes() {
   for (const m of manutencoes) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${esc(m.equipamento_nome)}</td>
+      <td>${linkEquipamento(m.equipamento_id, m.equipamento_nome)}</td>
       <td>${esc(m.motivo)}</td>
       <td>${brl(m.custo)}</td>
       <td>${dataHora(m.data_inicio)}</td>
@@ -153,12 +149,11 @@ async function carregarManutencoes() {
 
 $("#filtro-atribuicoes-ativas").addEventListener("change", carregarAtribuicoes);
 $("#filtro-manutencoes-abertas").addEventListener("change", carregarManutencoes);
-initMenu();
 
 (async function iniciar() {
   const usuario = await verificarSessao();
   if (!usuario) return;
-  aplicarUsuarioNoMenu(usuario);
+  aplicarUsuarioNaSidebar(usuario);
   try {
     await carregarAtribuicoes();
     await carregarManutencoes();

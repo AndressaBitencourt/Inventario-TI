@@ -79,10 +79,22 @@ pytest -v
 
 - `backend/app/` — API FastAPI (models, schemas, crud, serializers, routers)
 - `backend/tests/` — testes automatizados
-- `frontend/` — páginas servidas pelo próprio back-end: catálogo de
-  equipamentos (`index.html`), histórico de atribuições/manutenções
-  (`historico.html`), login (`login.html`) e relatórios (`relatorios.html`)
+- `frontend/` — páginas servidas pelo próprio back-end: dashboard
+  (`index.html`), lista de equipamentos (`equipamentos.html`), registro de
+  um equipamento com abas — detalhes/atribuições/manutenções/atividade
+  (`equipamento-detalhe.html`), histórico cruzado de atribuições e
+  manutenções (`historico.html`), login (`login.html`) e relatórios
+  (`relatorios.html`)
 - `docs/` — design de cada fase
+
+## Visual
+
+Interface inspirada em plataformas de ITSM/ITAM corporativas (ServiceNow,
+OCS Inventory): sidebar fixa com navegação, dashboard inicial com KPIs e
+atividade recente, e uma página de registro por equipamento com abas —
+incluindo uma aba de **Atividade**, que junta o histórico de atribuições e
+manutenções numa linha do tempo única. Ver a nota em
+`docs/design-fase-2.md`, seção 5.
 
 ## Papéis
 

@@ -19,20 +19,10 @@ function brl(valorStr) {
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-function initMenu() {
-  const btn = $("#btn-menu");
-  const menu = $("#menu-nav");
-  btn.addEventListener("click", () => {
-    const vaiAbrir = menu.hidden;
-    menu.hidden = !vaiAbrir;
-    btn.setAttribute("aria-expanded", String(vaiAbrir));
-  });
-  document.addEventListener("click", (e) => {
-    if (!menu.hidden && !menu.contains(e.target) && e.target !== btn) {
-      menu.hidden = true;
-      btn.setAttribute("aria-expanded", "false");
-    }
-  });
+function iniciais(nome) {
+  const partes = nome.trim().split(/\s+/);
+  const letras = partes.length > 1 ? partes[0][0] + partes[partes.length - 1][0] : partes[0].slice(0, 2);
+  return letras.toUpperCase();
 }
 
 async function verificarSessao(papelExigido) {
@@ -49,8 +39,10 @@ async function verificarSessao(papelExigido) {
   return usuario;
 }
 
-function aplicarUsuarioNoMenu(usuario) {
+function aplicarUsuarioNaSidebar(usuario) {
   $("#usuario-nome").textContent = usuario.nome;
+  $("#usuario-papel").textContent = usuario.papel;
+  $("#avatar-iniciais").textContent = iniciais(usuario.nome);
   $("#btn-sair").addEventListener("click", async () => {
     await fetch(`${API}/logout`, { method: "POST" });
     window.location.href = "/login.html";
@@ -92,10 +84,10 @@ async function carregarGraficoTipo() {
           data: dados.map((d) => d.quantidade),
           backgroundColor: (contexto) => {
             const { chartArea, ctx: canvasCtx } = contexto.chart;
-            if (!chartArea) return "#5AA7E0";
+            if (!chartArea) return "#1B6EC2";
             const gradiente = canvasCtx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-            gradiente.addColorStop(0, "#6FD3E8");
-            gradiente.addColorStop(1, "#3D6FD1");
+            gradiente.addColorStop(0, "#5AA7E0");
+            gradiente.addColorStop(1, "#1B6EC2");
             return gradiente;
           },
           borderRadius: 6,
@@ -150,12 +142,10 @@ async function carregarGraficoSetor() {
   });
 }
 
-initMenu();
-
 (async function iniciar() {
   const usuario = await verificarSessao("admin");
   if (!usuario) return;
-  aplicarUsuarioNoMenu(usuario);
+  aplicarUsuarioNaSidebar(usuario);
   try {
     await carregarResumo();
     await carregarGraficoTipo();

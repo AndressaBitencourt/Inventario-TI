@@ -1,11 +1,24 @@
 from fastapi.testclient import TestClient
 
 
-def test_raiz_serve_o_index(client: TestClient) -> None:
+def test_raiz_serve_o_dashboard(client: TestClient) -> None:
     resp = client.get("/")
     assert resp.status_code == 200
-    assert "Inventário de TI" in resp.text
-    assert "app.js" in resp.text
+    assert "Dashboard" in resp.text
+    assert "dashboard.js" in resp.text
+
+
+def test_equipamentos_serve_a_pagina(client: TestClient) -> None:
+    resp = client.get("/equipamentos.html")
+    assert resp.status_code == 200
+    assert "Equipamentos" in resp.text
+    assert "equipamentos.js" in resp.text
+
+
+def test_equipamento_detalhe_serve_a_pagina(client: TestClient) -> None:
+    resp = client.get("/equipamento-detalhe.html")
+    assert resp.status_code == 200
+    assert "equipamento-detalhe.js" in resp.text
 
 
 def test_login_serve_a_pagina(client: TestClient) -> None:

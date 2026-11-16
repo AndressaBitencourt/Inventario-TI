@@ -1,12 +1,15 @@
 "use strict";
 
 const API = "/api";
-let editandoId = null;
 let arquivoSelecionado = null;
 let urlPreviewAtual = null;
 let equipamentoDialogAtual = null;
-let statusAtivo = "";
 let usuarioAtual = null;
+let equipamentosTodos = [];
+let statusAtivo = "";
+let buscaTexto = "";
+let sortCampo = "nome";
+let sortDirecao = 1;
 
 const STATUS_LABELS = {
   disponivel: "Disponível",
@@ -37,20 +40,10 @@ function esc(valor) {
   );
 }
 
-function initMenu() {
-  const btn = $("#btn-menu");
-  const menu = $("#menu-nav");
-  btn.addEventListener("click", () => {
-    const vaiAbrir = menu.hidden;
-    menu.hidden = !vaiAbrir;
-    btn.setAttribute("aria-expanded", String(vaiAbrir));
-  });
-  document.addEventListener("click", (e) => {
-    if (!menu.hidden && !menu.contains(e.target) && e.target !== btn) {
-      menu.hidden = true;
-      btn.setAttribute("aria-expanded", "false");
-    }
-  });
+function iniciais(nome) {
+  const partes = nome.trim().split(/\s+/);
+  const letras = partes.length > 1 ? partes[0][0] + partes[partes.length - 1][0] : partes[0].slice(0, 2);
+  return letras.toUpperCase();
 }
 
 async function verificarSessao(papelExigido) {
@@ -67,9 +60,11 @@ async function verificarSessao(papelExigido) {
   return usuario;
 }
 
-function aplicarUsuarioNoMenu(usuario) {
+function aplicarUsuarioNaSidebar(usuario) {
   usuarioAtual = usuario;
   $("#usuario-nome").textContent = usuario.nome;
+  $("#usuario-papel").textContent = usuario.papel;
+  $("#avatar-iniciais").textContent = iniciais(usuario.nome);
   const linkRelatorios = $("#link-relatorios");
   if (linkRelatorios) linkRelatorios.hidden = usuario.papel !== "admin";
   $("#btn-sair").addEventListener("click", async () => {
@@ -95,38 +90,17 @@ async function api(caminho, opcoes) {
   return corpo;
 }
 
-function entrarModoEdicao(equipamento) {
-  editandoId = equipamento.id;
+function abrirFormNovo() {
+  $("#form-titulo").textContent = "Novo equipamento";
+  $("#form-equipamento").reset();
+  $("#preview-imagem").hidden = true;
   arquivoSelecionado = null;
-  $("#imagem").value = "";
-  $("#form-titulo").textContent = `Editar equipamento #${equipamento.id}`;
-  $("#btn-salvar").textContent = "Salvar alterações";
-  $("#btn-cancelar").hidden = false;
-  $("#nome").value = equipamento.nome;
-  $("#tipo").value = equipamento.tipo;
-  $("#numero_patrimonio").value = equipamento.numero_patrimonio;
-  $("#numero_serie").value = equipamento.numero_serie ?? "";
-  $("#marca").value = equipamento.marca;
-  $("#modelo").value = equipamento.modelo;
-  $("#valor").value = equipamento.valor ?? "";
-  const preview = $("#preview-imagem");
-  if (equipamento.imagem_url) {
-    preview.src = equipamento.imagem_url;
-    preview.hidden = false;
-  } else {
-    preview.hidden = true;
-  }
+  $("#secao-form").hidden = false;
   $("#secao-form").scrollIntoView({ behavior: "smooth" });
 }
 
-function sairModoEdicao() {
-  editandoId = null;
-  arquivoSelecionado = null;
-  $("#form-titulo").textContent = "Novo equipamento";
-  $("#btn-salvar").textContent = "Salvar equipamento";
-  $("#btn-cancelar").hidden = true;
-  $("#form-equipamento").reset();
-  $("#preview-imagem").hidden = true;
+function fecharForm() {
+  $("#secao-form").hidden = true;
 }
 
 async function enviarImagem(equipamentoId, arquivo) {
@@ -158,47 +132,32 @@ async function submeter(evento) {
     modelo: $("#modelo").value.trim(),
     valor: $("#valor").value || null,
   };
-  const estavaEditando = Boolean(editandoId);
   const arquivoParaEnviar = arquivoSelecionado;
   let equipamento;
   try {
-    if (editandoId) {
-      equipamento = await api(`/equipamentos/${editandoId}`, {
-        method: "PUT",
-        body: JSON.stringify(payload),
-      });
-    } else {
-      equipamento = await api("/equipamentos", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-    }
+    equipamento = await api("/equipamentos", { method: "POST", body: JSON.stringify(payload) });
   } catch (e) {
     aviso(e.message, "erro");
     return;
   }
 
-  sairModoEdicao();
+  fecharForm();
   await carregarEquipamentos();
 
   if (!arquivoParaEnviar) {
-    aviso(estavaEditando ? "Equipamento atualizado." : "Equipamento cadastrado.", "ok");
+    aviso("Equipamento cadastrado.", "ok");
     return;
   }
-
   try {
     await enviarImagem(equipamento.id, arquivoParaEnviar);
-    aviso(estavaEditando ? "Equipamento atualizado." : "Equipamento cadastrado.", "ok");
+    aviso("Equipamento cadastrado.", "ok");
     await carregarEquipamentos();
   } catch (e) {
-    aviso(
-      `Equipamento ${estavaEditando ? "atualizado" : "cadastrado"}, mas a foto não foi enviada: ${e.message}`,
-      "erro"
-    );
+    aviso(`Equipamento cadastrado, mas a foto não foi enviada: ${e.message}`, "erro");
   }
 }
 
-function renderStatusTabs() {
+function renderPills() {
   const opcoes = [
     { valor: "", rotulo: "Todos" },
     { valor: "disponivel", rotulo: "Disponível" },
@@ -206,52 +165,45 @@ function renderStatusTabs() {
     { valor: "manutencao", rotulo: "Em manutenção" },
     { valor: "baixado", rotulo: "Baixado" },
   ];
-  const tabs = $("#status-tabs");
-  tabs.innerHTML = "";
-  for (const op of opcoes) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "categoria-tab" + (op.valor === statusAtivo ? " ativa" : "");
-    btn.textContent = op.rotulo;
+  $("#status-pills").innerHTML = opcoes
+    .map(
+      (op) =>
+        `<button type="button" class="pill-filter${op.valor === statusAtivo ? " ativa" : ""}" data-valor="${op.valor}">${op.rotulo}</button>`
+    )
+    .join("");
+  $("#status-pills").querySelectorAll(".pill-filter").forEach((btn) => {
     btn.addEventListener("click", () => {
-      statusAtivo = op.valor;
-      renderStatusTabs();
-      carregarEquipamentos();
+      statusAtivo = btn.dataset.valor;
+      renderPills();
+      renderLista();
     });
-    tabs.appendChild(btn);
-  }
+  });
 }
 
-function atualizarListaTipos(equipamentos) {
-  const tipos = [...new Set(equipamentos.map((e) => e.tipo))].sort((a, b) =>
+function atualizarListaTipos() {
+  const tipos = [...new Set(equipamentosTodos.map((e) => e.tipo))].sort((a, b) =>
     a.localeCompare(b, "pt-BR")
   );
-  $("#tipos-lista").innerHTML = tipos
-    .map((t) => `<option value="${esc(t)}"></option>`)
-    .join("");
+  $("#tipos-lista").innerHTML = tipos.map((t) => `<option value="${esc(t)}"></option>`).join("");
 }
 
 function abrirDialogAtribuir(equipamento) {
   equipamentoDialogAtual = equipamento.id;
-  $("#atribuir-equipamento-nome").textContent =
-    `${equipamento.nome} — patrimônio ${equipamento.numero_patrimonio}`;
+  $("#atribuir-equipamento-nome").textContent = `${equipamento.nome} — patrimônio ${equipamento.numero_patrimonio}`;
   $("#form-atribuir").reset();
   $("#dialog-atribuir").showModal();
 }
 
 function abrirDialogManutencao(equipamento) {
   equipamentoDialogAtual = equipamento.id;
-  $("#manutencao-equipamento-nome").textContent =
-    `${equipamento.nome} — patrimônio ${equipamento.numero_patrimonio}`;
+  $("#manutencao-equipamento-nome").textContent = `${equipamento.nome} — patrimônio ${equipamento.numero_patrimonio}`;
   $("#form-manutencao").reset();
   $("#dialog-manutencao").showModal();
 }
 
 async function acaoDevolver(equipamentoId) {
   try {
-    const ativas = await api(
-      `/atribuicoes?somente_ativas=true&equipamento_id=${equipamentoId}`
-    );
+    const ativas = await api(`/atribuicoes?somente_ativas=true&equipamento_id=${equipamentoId}`);
     if (ativas.length === 0) {
       aviso("Não foi encontrada uma atribuição ativa para devolver.", "erro");
       return;
@@ -266,9 +218,7 @@ async function acaoDevolver(equipamentoId) {
 
 async function acaoFinalizarManutencao(equipamentoId) {
   try {
-    const abertas = await api(
-      `/manutencoes?somente_abertas=true&equipamento_id=${equipamentoId}`
-    );
+    const abertas = await api(`/manutencoes?somente_abertas=true&equipamento_id=${equipamentoId}`);
     if (abertas.length === 0) {
       aviso("Não foi encontrada uma manutenção aberta para finalizar.", "erro");
       return;
@@ -302,96 +252,124 @@ async function acaoReativar(equipamentoId) {
   }
 }
 
-async function acaoExcluir(equipamentoId, nome) {
-  if (!confirm(`Excluir "${nome}"? Essa ação não pode ser desfeita.`)) return;
-  try {
-    await api(`/equipamentos/${equipamentoId}`, { method: "DELETE" });
-    aviso("Equipamento excluído.", "ok");
-    await carregarEquipamentos();
-  } catch (e) {
-    aviso(e.message, "erro");
+function acaoRapida(eq) {
+  if (eq.status === "disponivel") {
+    return [
+      { texto: "Atribuir", classe: "", fn: () => abrirDialogAtribuir(eq) },
+      { texto: "Manutenção", classe: "secundario", fn: () => abrirDialogManutencao(eq) },
+      { texto: "Dar baixa", classe: "perigo", fn: () => acaoBaixar(eq.id, eq.nome) },
+    ];
   }
+  if (eq.status === "em_uso") return [{ texto: "Devolver", classe: "", fn: () => acaoDevolver(eq.id) }];
+  if (eq.status === "manutencao")
+    return [{ texto: "Finalizar manutenção", classe: "", fn: () => acaoFinalizarManutencao(eq.id) }];
+  if (eq.status === "baixado") return [{ texto: "Reativar", classe: "", fn: () => acaoReativar(eq.id) }];
+  return [];
 }
 
-function renderTabela(equipamentos) {
+function aplicarFiltrosOrdenacao() {
+  const termo = buscaTexto.trim().toLowerCase();
+  let lista = equipamentosTodos.filter((e) => {
+    if (statusAtivo && e.status !== statusAtivo) return false;
+    if (!termo) return true;
+    return (
+      e.nome.toLowerCase().includes(termo) ||
+      e.numero_patrimonio.toLowerCase().includes(termo) ||
+      e.marca.toLowerCase().includes(termo) ||
+      e.modelo.toLowerCase().includes(termo)
+    );
+  });
+  lista.sort((a, b) => {
+    let va = a[sortCampo];
+    let vb = b[sortCampo];
+    if (sortCampo === "valor") {
+      va = Number(va ?? 0);
+      vb = Number(vb ?? 0);
+    } else {
+      va = String(va ?? "").toLowerCase();
+      vb = String(vb ?? "").toLowerCase();
+    }
+    if (va < vb) return -1 * sortDirecao;
+    if (va > vb) return 1 * sortDirecao;
+    return 0;
+  });
+  return lista;
+}
+
+function renderLista() {
+  const lista = aplicarFiltrosOrdenacao();
   const tbody = $("#lista-equipamentos");
   tbody.innerHTML = "";
-  $("#equipamentos-vazio").hidden = equipamentos.length > 0;
-  for (const eq of equipamentos) {
+  $("#equipamentos-vazio").hidden = lista.length > 0;
+
+  document.querySelectorAll(".data-table th.sortavel").forEach((th) => {
+    th.querySelector(".seta-ordem")?.remove();
+    if (th.dataset.campo === sortCampo) {
+      const seta = document.createElement("span");
+      seta.className = "seta-ordem";
+      seta.textContent = sortDirecao === 1 ? "▲" : "▼";
+      th.appendChild(seta);
+    }
+  });
+
+  for (const eq of lista) {
     const tr = document.createElement("tr");
+    tr.className = "clicavel";
     const foto = eq.imagem_url || "/images/placeholder.svg";
     tr.innerHTML = `
       <td><img class="thumb" src="${esc(foto)}" alt="${esc(eq.nome)}" /></td>
-      <td>${esc(eq.nome)}<br /><small>${esc(eq.marca)} ${esc(eq.modelo)}</small></td>
+      <td>${esc(eq.nome)}</td>
       <td>${esc(eq.numero_patrimonio)}</td>
+      <td>${esc(eq.tipo)}</td>
       <td>${esc(eq.marca)} / ${esc(eq.modelo)}</td>
       <td>${brl(eq.valor)}</td>
       <td><span class="badge-status badge-${eq.status}">${STATUS_LABELS[eq.status]}</span></td>
       <td></td>`;
-    const acoes = tr.lastElementChild;
-
-    if (eq.status === "disponivel") {
-      const bAtribuir = document.createElement("button");
-      bAtribuir.textContent = "Atribuir";
-      bAtribuir.addEventListener("click", () => abrirDialogAtribuir(eq));
-      acoes.appendChild(bAtribuir);
-
-      const bManutencao = document.createElement("button");
-      bManutencao.textContent = "Manutenção";
-      bManutencao.className = "secundario";
-      bManutencao.addEventListener("click", () => abrirDialogManutencao(eq));
-      acoes.appendChild(bManutencao);
-
-      const bBaixar = document.createElement("button");
-      bBaixar.textContent = "Dar baixa";
-      bBaixar.className = "perigo";
-      bBaixar.addEventListener("click", () => acaoBaixar(eq.id, eq.nome));
-      acoes.appendChild(bBaixar);
-    } else if (eq.status === "em_uso") {
-      const bDevolver = document.createElement("button");
-      bDevolver.textContent = "Devolver";
-      bDevolver.addEventListener("click", () => acaoDevolver(eq.id));
-      acoes.appendChild(bDevolver);
-    } else if (eq.status === "manutencao") {
-      const bFinalizar = document.createElement("button");
-      bFinalizar.textContent = "Finalizar manutenção";
-      bFinalizar.addEventListener("click", () => acaoFinalizarManutencao(eq.id));
-      acoes.appendChild(bFinalizar);
-    } else if (eq.status === "baixado") {
-      const bReativar = document.createElement("button");
-      bReativar.textContent = "Reativar";
-      bReativar.addEventListener("click", () => acaoReativar(eq.id));
-      acoes.appendChild(bReativar);
+    tr.addEventListener("click", () => {
+      window.location.href = `/equipamento-detalhe.html?id=${eq.id}`;
+    });
+    const acoesTd = tr.lastElementChild;
+    acoesTd.className = "acoes-tabela";
+    for (const acao of acaoRapida(eq)) {
+      const btn = document.createElement("button");
+      btn.textContent = acao.texto;
+      if (acao.classe) btn.className = acao.classe;
+      btn.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        acao.fn();
+      });
+      acoesTd.appendChild(btn);
     }
-
-    const bEditar = document.createElement("button");
-    bEditar.textContent = "Editar";
-    bEditar.className = "secundario";
-    bEditar.addEventListener("click", () => entrarModoEdicao(eq));
-    acoes.appendChild(bEditar);
-
-    if (usuarioAtual && usuarioAtual.papel === "admin") {
-      const bExcluir = document.createElement("button");
-      bExcluir.textContent = "Excluir";
-      bExcluir.className = "perigo";
-      bExcluir.addEventListener("click", () => acaoExcluir(eq.id, eq.nome));
-      acoes.appendChild(bExcluir);
-    }
-
     tbody.appendChild(tr);
   }
 }
 
 async function carregarEquipamentos() {
-  const query = statusAtivo ? `?status_filtro=${encodeURIComponent(statusAtivo)}` : "";
-  const equipamentos = await api(`/equipamentos${query}`);
-  const todos = statusAtivo ? await api("/equipamentos") : equipamentos;
-  atualizarListaTipos(todos);
-  renderTabela(equipamentos);
+  equipamentosTodos = await api("/equipamentos");
+  atualizarListaTipos();
+  renderLista();
 }
 
+document.querySelectorAll(".data-table th.sortavel").forEach((th) => {
+  th.addEventListener("click", () => {
+    const campo = th.dataset.campo;
+    if (sortCampo === campo) sortDirecao *= -1;
+    else {
+      sortCampo = campo;
+      sortDirecao = 1;
+    }
+    renderLista();
+  });
+});
+
+$("#busca").addEventListener("input", (e) => {
+  buscaTexto = e.target.value;
+  renderLista();
+});
+
+$("#btn-novo").addEventListener("click", abrirFormNovo);
 $("#form-equipamento").addEventListener("submit", submeter);
-$("#btn-cancelar").addEventListener("click", sairModoEdicao);
+$("#btn-cancelar").addEventListener("click", fecharForm);
 $("#imagem").addEventListener("change", (e) => {
   const arquivo = e.target.files[0] ?? null;
   arquivoSelecionado = arquivo;
@@ -452,13 +430,10 @@ $("#form-manutencao").addEventListener("submit", async (evento) => {
 });
 $("#btn-cancelar-manutencao").addEventListener("click", () => $("#dialog-manutencao").close());
 
-initMenu();
-renderStatusTabs();
-
 (async function iniciar() {
   const usuario = await verificarSessao();
   if (!usuario) return;
-  aplicarUsuarioNoMenu(usuario);
+  aplicarUsuarioNaSidebar(usuario);
   try {
     await carregarEquipamentos();
   } catch (e) {

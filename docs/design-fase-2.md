@@ -78,6 +78,10 @@ reenviar o resto do cadastro.
 
 ## 5. Identidade visual
 
+> **Superado.** A paleta e o layout descritos abaixo foram a primeira
+> versão. Depois da entrega, essa identidade foi substituída por um
+> desenho inspirado em ServiceNow/OCS Inventory — ver seção 9.
+
 Paleta e tipografia próprias, para não parecer uma cópia do projeto
 anterior:
 
@@ -94,8 +98,12 @@ anterior:
 
 ## 6. Front-end
 
-`app.js` ganha os botões condicionais por status na tabela de
-equipamentos — o conjunto de ações muda conforme o `status` da linha:
+> **Nota:** esta seção descreve a primeira versão (uma tabela só, em
+> `app.js`). A estrutura de páginas mudou na seção 9 — a lógica de ações
+> por status abaixo continua valendo, só migrou de arquivo.
+
+A tabela de equipamentos ganha botões condicionais por status — o conjunto
+de ações muda conforme o `status` da linha:
 
 | Status | Ações disponíveis |
 | --- | --- |
@@ -125,3 +133,44 @@ teste de permissão da exclusão (`403` pra quem não é admin).
   aqui pressupõe o papel que só é formalizado (login, sessão, tela) na
   Fase 3 (ver nota sobre o processo em `docs/design-fase-3.md`).
 - Relatórios.
+
+---
+
+## 9. Histórico — redesenho visual (2026-11-16)
+
+Depois da entrega, pedi pra deixar a interface "mais profissional" —
+referência: ServiceNow (ITSM) e OCS Inventory NG. A tabela única com
+formulário sempre visível virou uma estrutura de várias páginas, no
+mesmo espírito de um console administrativo corporativo:
+
+| Antes (seção 5-6) | Agora |
+| --- | --- |
+| `index.html` + `app.js`: cardápio de equipamentos numa tabela só, com form de cadastro sempre visível no topo | `index.html` + `dashboard.js`: **dashboard** — KPIs (total, por status), manutenções abertas, atividade recente |
+| — | `equipamentos.html` + `equipamentos.js`: **lista** — busca, filtro por status (pills), colunas ordenáveis, form de cadastro recolhível |
+| Ações (atribuir/editar/excluir/etc.) direto na linha da tabela | `equipamento-detalhe.html` + `equipamento-detalhe.js`: **página de registro** por equipamento, com abas Detalhes / Atribuições / Manutenções / **Atividade** |
+| Menu hambúrguer (`☰`) | Sidebar fixa à esquerda, com ícones |
+| Paleta azul-marinho + Space Grotesk | Sidebar escura (`#121C26`) + azul "Now" (`#1B6EC2`) como destaque, tudo em Inter — mais próximo da estética enterprise/SaaS |
+
+**Aba "Atividade" (nova):** une num só feed cronológico a criação do
+equipamento, toda atribuição/devolução e toda manutenção aberta/
+finalizada daquele equipamento — ao estilo do activity feed do
+ServiceNow ou do histórico do OCS Inventory. Montada inteiramente no
+front-end (`equipamento-detalhe.js` busca `/api/atribuicoes?equipamento_id=`
+e `/api/manutencoes?equipamento_id=` e junta os dois com a data de
+criação do equipamento, ordenando por data) — **nenhum endpoint novo no
+backend**, nenhuma tabela de auditoria nova. O dashboard usa a mesma
+técnica (sem filtro de equipamento) pra montar o feed de "Atividade
+recente" global.
+
+**Decisão deliberada — sem atividade pra baixa/reativação.** `baixar` e
+`reativar` mudam o `status` do equipamento direto, sem deixar um registro
+próprio (diferente de atribuição e manutenção, que têm tabela com início/
+fim). Por isso esses dois eventos não aparecem na linha do tempo — incluir
+viraria um evento sintético sem dado real por trás. Se isso importar no
+futuro, a solução correta é uma tabela de auditoria genérica por
+equipamento, não forçar esse encaixe nas tabelas existentes.
+
+**Responsividade:** acima de 760px a sidebar mostra ícone + texto; abaixo
+disso vira uma barra estreita só de ícones (sem menu gaveta) — trade-off
+consciente pra não reconstruir uma navegação mobile completa num projeto
+que roda principalmente em desktop durante a apresentação.
