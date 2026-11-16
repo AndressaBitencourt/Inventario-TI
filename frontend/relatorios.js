@@ -82,14 +82,7 @@ async function carregarGraficoTipo() {
         {
           label: "Quantidade",
           data: dados.map((d) => d.quantidade),
-          backgroundColor: (contexto) => {
-            const { chartArea, ctx: canvasCtx } = contexto.chart;
-            if (!chartArea) return "#1B6EC2";
-            const gradiente = canvasCtx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-            gradiente.addColorStop(0, "#5AA7E0");
-            gradiente.addColorStop(1, "#1B6EC2");
-            return gradiente;
-          },
+          backgroundColor: dados.map((_, i) => PALETA[i % PALETA.length]),
           borderRadius: 6,
           maxBarThickness: 46,
         },
