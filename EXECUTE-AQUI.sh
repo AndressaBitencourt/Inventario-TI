@@ -1,0 +1,168 @@
+#!/usr/bin/env bash
+# ============================================================================
+#  Inventario-TI - sistema de inventario de equipamentos de TI
+#  Sobe o app e abre o navegador.  Para rodar os testes:  ./EXECUTE-AQUI.sh test
+#  O script verifica o Python, instala o que faltar e explica cada passo.
+# ============================================================================
+set -uo pipefail
+
+PORT=8000
+URL="http://localhost:$PORT"
+
+cd "$(dirname "$0")"
+ROOT="$(pwd)"
+
+echo "=================================================================="
+echo "  INVENTARIO-TI"
+echo "  Pasta: $ROOT"
+echo "=================================================================="
+echo
+
+fail() {
+  echo
+  echo "================================================================"
+  echo "  PAROU AQUI. O que falta / como resolver:"
+  echo
+  echo "  $1"
+  echo "================================================================"
+  echo
+  exit 1
+}
+
+[ -f "$ROOT/backend/requirements.txt" ] || fail "Nao encontrei a pasta 'backend'. Extraia tudo e deixe o EXECUTE-AQUI.sh na mesma pasta que 'backend' e 'frontend'."
+cd "$ROOT/backend"
+
+# ------------------------------------------------------------------ [1/5] Python
+echo "[1/5] Procurando o Python (>= 3.10)..."
+PY=""
+for c in python3.12 python3.11 python3.10 python3 python; do
+  if command -v "$c" >/dev/null 2>&1 && "$c" -c 'import sys; raise SystemExit(0 if sys.version_info>=(3,10) else 1)' 2>/dev/null; then
+    PY="$c"; break
+  fi
+done
+
+if [ -z "$PY" ]; then
+  echo "      Python 3.10+ nao encontrado. Tentando instalar automaticamente..."
+  echo
+  if [ "$(uname)" = "Darwin" ]; then
+    if command -v brew >/dev/null 2>&1; then
+      brew install python@3.12 || true
+    else
+      echo "      O Homebrew nao esta instalado (seria o instalador automatico no Mac)."
+      echo "      Abrindo a pagina oficial do Python..."
+      open "https://www.python.org/downloads/" 2>/dev/null || true
+      fail "Instale o Python 3.12 de python.org (ou instale o Homebrew e rode de novo), depois rode o EXECUTE-AQUI.sh outra vez."
+    fi
+  elif command -v apt-get >/dev/null 2>&1; then
+    sudo apt-get update && sudo apt-get install -y python3 python3-venv python3-pip || true
+  else
+    fail "Nao sei instalar o Python automaticamente neste sistema. Instale o Python 3.10+ e rode o EXECUTE-AQUI.sh de novo."
+  fi
+  for c in python3.12 python3.11 python3.10 python3 python; do
+    if command -v "$c" >/dev/null 2>&1 && "$c" -c 'import sys; raise SystemExit(0 if sys.version_info>=(3,10) else 1)' 2>/dev/null; then
+      PY="$c"; break
+    fi
+  done
+  [ -n "$PY" ] || fail "O Python foi instalado mas nao apareceu no PATH desta sessao. Feche o terminal, abra de novo e rode o EXECUTE-AQUI.sh mais uma vez."
+fi
+echo "      OK - $("$PY" --version)   (comando: $PY)"
+echo
+
+# -------------------------------------------------------------------- [2/5] venv
+echo "[2/5] Preparando o ambiente virtual (.venv)..."
+if [ ! -x ".venv/bin/python" ]; then
+  echo "      Criando pela primeira vez - pode demorar 1-2 min..."
+  "$PY" -m venv .venv || fail "Falha ao criar o .venv. No Linux pode faltar o pacote: sudo apt-get install python3-venv"
+fi
+[ -x ".venv/bin/python" ] || fail "O .venv nao foi criado. Rode na mao, dentro de 'backend':  $PY -m venv .venv"
+VENV_PY="./.venv/bin/python"
+echo "      OK"
+echo
+
+# ------------------------------------------------------------ [3/5] dependencias
+echo "[3/5] Instalando dependencias (fastapi, uvicorn, sqlalchemy, pydantic...)..."
+"$VENV_PY" -m pip install --quiet --upgrade pip
+if ! "$VENV_PY" -m pip install -r requirements.txt; then
+  fail "O pip falhou ao instalar as dependencias (veja o erro acima). Quase sempre e falta de internet, ou proxy/firewall bloqueando o pypi.org."
+fi
+echo "      OK"
+echo
+
+# -------------------------------------------------------------------- [4/5] porta
+# Mata quem estiver ouvindo em $PORT - mas so se for um processo Python (ou
+# seja, uma execucao anterior deste mesmo app) - e espera a porta liberar.
+# Assim, rodar o EXECUTE-AQUI.sh duas vezes nunca deixa duas instancias do
+# servidor no ar nem abre o navegador apontando pra uma instancia velha.
+echo "[4/5] Checando a porta $PORT..."
+if command -v lsof >/dev/null 2>&1; then
+  # -sTCP:LISTEN e essencial: sem isso o lsof tambem lista o navegador (cliente
+  # conectado na porta), e a gente quase mata a aba do Chrome por engano.
+  PIDS="$(lsof -tiTCP:"$PORT" -sTCP:LISTEN 2>/dev/null || true)"
+  if [ -n "$PIDS" ]; then
+    FREED=""
+    for pid in $PIDS; do
+      PNAME="$(ps -p "$pid" -o comm= 2>/dev/null || true)"
+      case "$PNAME" in
+        *[Pp]ython*|*uvicorn*)
+          echo "      Encerrando uma execucao anterior deste app (PID $pid)..."
+          kill "$pid" 2>/dev/null || true
+          FREED=1
+          ;;
+        *)
+          echo "      AVISO: a porta $PORT esta em uso por \"$PNAME\" (PID $pid), que nao parece ser este app."
+          echo "             Feche esse programa manualmente se a porta continuar ocupada."
+          ;;
+      esac
+    done
+    if [ -n "$FREED" ]; then
+      for _ in 1 2 3 4 5; do
+        lsof -tiTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1 || break
+        sleep 1
+      done
+      # ainda vivo apos pedir gentilmente? forca o encerramento
+      REMAINING="$(lsof -tiTCP:"$PORT" -sTCP:LISTEN 2>/dev/null || true)"
+      [ -n "$REMAINING" ] && kill -9 $REMAINING 2>/dev/null || true
+    fi
+  fi
+fi
+echo "      OK"
+echo
+
+# ----------------------------------------------------------- [5/5] rodar/testar
+if [ "${1:-}" = "test" ]; then
+  echo "[5/5] Rodando os testes..."
+  echo
+  exec "$VENV_PY" -m pytest -v
+fi
+
+# cache-buster: cada execucao abre uma URL diferente, entao o navegador nunca
+# reaproveita HTML/CSS/JS antigos em cache de uma execucao anterior.
+OPEN_URL="$URL/?v=$(date +%s)"
+
+echo "[5/5] Subindo o servidor..."
+echo
+echo "================================================================"
+echo "  App:   $URL"
+echo "  API:   $URL/docs"
+echo "  Parar: Ctrl+C"
+echo "================================================================"
+echo
+
+# abre o navegador ~3s depois (tempo do servidor subir), de preferencia numa
+# janela anonima/privada (sem usar o cache do navegador de todo)
+(
+  sleep 3
+  if [ "$(uname)" = "Darwin" ] && [ -d "/Applications/Google Chrome.app" ]; then
+    open -na "Google Chrome" --args --incognito "$OPEN_URL"
+  elif command -v google-chrome >/dev/null 2>&1; then
+    google-chrome --incognito "$OPEN_URL" >/dev/null 2>&1 &
+  elif command -v chromium >/dev/null 2>&1; then
+    chromium --incognito "$OPEN_URL" >/dev/null 2>&1 &
+  elif command -v open >/dev/null 2>&1; then
+    open "$OPEN_URL"
+  elif command -v xdg-open >/dev/null 2>&1; then
+    xdg-open "$OPEN_URL"
+  fi
+) >/dev/null 2>&1 &
+
+exec "$VENV_PY" -m uvicorn app.main:app --port "$PORT"

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inventário de TI — Histórico</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>🖥️ Inventário de TI — Histórico</h1>
+    <button class="hamb-btn" id="btn-menu" aria-label="Abrir menu" aria-expanded="false">☰</button>
+    <nav class="hamb-menu" id="menu-nav" hidden>
+      <a href="/">Equipamentos</a>
+      <a href="/historico.html" class="active">Histórico</a>
+      <a href="/relatorios.html" id="link-relatorios">Relatórios</a>
+      <div class="menu-usuario">
+        <span id="usuario-nome"></span>
+        <button type="button" id="btn-sair" class="secundario">Sair</button>
+      </div>
+    </nav>
+  </header>
+
+  <div id="aviso" class="aviso" hidden></div>
+
+  <main>
+    <section id="secao-atribuicoes">
+      <h2>Atribuições</h2>
+      <label class="filtro-checkbox">
+        <input type="checkbox" id="filtro-atribuicoes-ativas" checked />
+        Mostrar só as atribuições ativas
+      </label>
+      <table>
+        <thead>
+          <tr>
+            <th>Equipamento</th><th>Responsável</th><th>Setor</th>
+            <th>Retirada</th><th>Devolução</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="lista-atribuicoes"></tbody>
+      </table>
+      <p id="atribuicoes-vazio" hidden>Nenhuma atribuição encontrada.</p>
+    </section>
+
+    <section id="secao-manutencoes">
+      <h2>Manutenções</h2>
+      <label class="filtro-checkbox">
+        <input type="checkbox" id="filtro-manutencoes-abertas" checked />
+        Mostrar só as manutenções abertas
+      </label>
+      <table>
+        <thead>
+          <tr>
+            <th>Equipamento</th><th>Motivo</th><th>Custo</th>
+            <th>Início</th><th>Fim</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="lista-manutencoes"></tbody>
+      </table>
+      <p id="manutencoes-vazio" hidden>Nenhuma manutenção encontrada.</p>
+    </section>
+  </main>
+
+  <script src="historico.js"></script>
+</body>
+</html>

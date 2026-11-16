@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inventário de TI — Relatórios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>🖥️ Inventário de TI — Relatórios</h1>
+    <button class="hamb-btn" id="btn-menu" aria-label="Abrir menu" aria-expanded="false">☰</button>
+    <nav class="hamb-menu" id="menu-nav" hidden>
+      <a href="/">Equipamentos</a>
+      <a href="/historico.html">Histórico</a>
+      <a href="/relatorios.html" class="active">Relatórios</a>
+      <div class="menu-usuario">
+        <span id="usuario-nome"></span>
+        <button type="button" id="btn-sair" class="secundario">Sair</button>
+      </div>
+    </nav>
+  </header>
+
+  <div id="aviso" class="aviso" hidden></div>
+
+  <main>
+    <section id="secao-resumo">
+      <h2>Resumo do patrimônio</h2>
+      <div class="cards-resumo">
+        <div class="card-resumo">
+          <small>Total de equipamentos</small>
+          <strong id="resumo-total">—</strong>
+        </div>
+        <div class="card-resumo">
+          <small>Valor total</small>
+          <strong id="resumo-valor">—</strong>
+        </div>
+        <div class="card-resumo">
+          <small>Disponíveis</small>
+          <strong id="resumo-disponivel">—</strong>
+        </div>
+        <div class="card-resumo">
+          <small>Em uso</small>
+          <strong id="resumo-em-uso">—</strong>
+        </div>
+        <div class="card-resumo">
+          <small>Em manutenção</small>
+          <strong id="resumo-manutencao">—</strong>
+        </div>
+        <div class="card-resumo">
+          <small>Baixados</small>
+          <strong id="resumo-baixado">—</strong>
+        </div>
+      </div>
+    </section>
+
+    <section id="secao-graficos">
+      <div class="grafico-dark-card">
+        <h2>Equipamentos por tipo</h2>
+        <small>Quantidade cadastrada de cada tipo de equipamento.</small>
+        <canvas id="grafico-tipo"></canvas>
+      </div>
+
+      <div class="grafico-dark-card">
+        <h2>Equipamentos em uso por setor</h2>
+        <small>Quantos equipamentos cada setor está usando agora (atribuições ativas).</small>
+        <canvas id="grafico-setor"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <script src="relatorios.js"></script>
+</body>
+</html>
