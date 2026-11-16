@@ -184,13 +184,14 @@ form input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 
 /* ===================== KPI cards ===================== */
 
-.kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px; margin-bottom: 22px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; margin-bottom: 22px; }
 .kpi-card {
   background: var(--surface);
   border: 1px solid var(--line);
   border-left: 3px solid var(--accent);
   border-radius: 10px;
   padding: 16px 18px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -199,7 +200,13 @@ form input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
 .kpi-card.warn { border-left-color: #D1A000; }
 .kpi-card.off { border-left-color: #8A93A3; }
 .kpi-card small { color: var(--muted); font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 600; }
-.kpi-card strong { font-size: 1.7rem; font-variant-numeric: tabular-nums; }
+.kpi-card strong {
+  font-size: 1.4rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 /* ===================== List toolbar / filtro pills ===================== */
 
